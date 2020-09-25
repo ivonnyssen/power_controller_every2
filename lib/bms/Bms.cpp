@@ -64,7 +64,6 @@ void Bms::begin(uint16_t timeout) {
 #if BMS_OPTION_DEBUG
     Serial.println("OverkillSolarBMS Begin!");
 #endif
-    Serial.println("here");
     serial->setTimeout(timeout);
 }
 
@@ -124,80 +123,6 @@ void Bms::calculateMosfetCommandString(uint8_t * commandString, bool charge, boo
     commandString[7] = (uint8_t) checksum;
 }
 
-#if BMS_OPTION_DEBUG
-void Bms::debug() {
-    Serial.println("==============================================");
-    Serial.print("Voltage:           ");
-    Serial.print(totalVoltage, 3);
-    Serial.println(" V");
-
-    Serial.print("Current:           ");
-    Serial.print(current, 3);
-    Serial.println(" A");
-
-    Serial.print("Balance capacity:  ");
-    Serial.print(balanceCapacity, 3);
-    Serial.println(" Ah");
-
-    Serial.print("Rate capacity:     ");
-    Serial.print(rateCapacity, 3);
-    Serial.println(" Ah");
-
-    Serial.print("Cycle count:       ");
-    Serial.println(cycleCount , DEC);
-
-    Serial.print("Production Date:   ");
-    Serial.print(productionDate.day, DEC);
-    Serial.print("/");
-    Serial.print(productionDate.month, DEC);
-    Serial.print("/");
-    Serial.println(productionDate.year, DEC);
-
-    Serial.println("Protection Status: ");
-    protectionStatus.printFaultCounts(&Serial);
-
-    Serial.print("Software version:  ");
-    Serial.print(softwareVersion.major, DEC);
-    Serial.print(".");
-    Serial.println(softwareVersion.minor, DEC);
-
-    Serial.print("State of Charge:   ");
-    Serial.print(stateOfCharge, DEC);
-    Serial.println("%");
-
-    Serial.print("Discharge MOSFET:  ");
-    Serial.println(isDischargeFetEnabled ? "ON" : "OFF");
-
-    Serial.print("Charge MOSFET:     ");
-    Serial.println(isChargeFetEnabled ? "ON" : "OFF");
-
-    Serial.print("# of cells:        ");
-    Serial.println(numCells, DEC);
-
-    Serial.print("# of temp sensors: ");
-    Serial.println(numTemperatureSensors, DEC);
-
-    Serial.println("Temperatures:");
-    for (int i=0; i < min(NUM_TEMP_SENSORS, numTemperatureSensors); i++) {
-        Serial.print("  ");
-        Serial.print(temperatures[i], 1);
-        Serial.println(" deg C");
-    }
-
-    Serial.println("Cell Voltages & Balance Status: ");
-    for (int i=0; i < min(NUM_CELLS, numCells); i++) {
-        Serial.print("  ");
-        Serial.print(cellVoltages[i], 3);  // Returns the cell voltage, in volts
-        Serial.print("V  ");
-        Serial.println(isBalancing(i) ? "(balancing)" : "(not balancing)");
-    }
-
-    Serial.print("Bms Name:         ");
-    Serial.println(name);
-    Serial.println();
-}
-#endif
-
 void Bms::queryBasicInfo() {
 #if BMS_OPTION_DEBUG
     Serial.println("Query 0x03 Basic Info");
@@ -215,10 +140,10 @@ void Bms::queryBasicInfo() {
 }
 
 void Bms::parseBasicInfoResponse(const uint8_t *buffer) {
-    totalVoltage = 0.01f * (float)((uint16_t)(buffer[4] << 8u) | (uint16_t)(buffer[5]));
-    current =  0.01f * (float) ((uint16_t)(buffer[6] << 8u) | (uint16_t)(buffer[7]));
-    balanceCapacity = 0.01f * (float) ((uint16_t)(buffer[8] << 8u) | (uint16_t)(buffer[9]));
-    rateCapacity = 0.01f * (float) ((uint16_t)(buffer[10] << 8u) | (uint16_t)(buffer[11]));
+    totalVoltage = (uint16_t)(buffer[4] << 8u) | (uint16_t)(buffer[5]);
+    current =  (uint16_t)(buffer[6] << 8u) | (uint16_t)(buffer[7]);
+    balanceCapacity = (uint16_t)(buffer[8] << 8u) | (uint16_t)(buffer[9]);
+    rateCapacity = (uint16_t)(buffer[10] << 8u) | (uint16_t)(buffer[11]);
     cycleCount = (uint16_t)(buffer[12] << 8u) | (uint16_t)(buffer[13]);
     productionDate = ProductionDate((uint16_t)(buffer[14] << 8u) | (uint16_t)(buffer[15]));
     balanceStatus = (uint32_t)(buffer[16] << 8u) | (uint32_t)(buffer[17]) | (uint32_t)(buffer[18] << 24u) | (uint32_t)(buffer[19] << 16u) ;
@@ -231,7 +156,7 @@ void Bms::parseBasicInfoResponse(const uint8_t *buffer) {
     numTemperatureSensors = buffer[26];
 
     for (int i = 0; i < min(numTemperatureSensors, NUM_TEMP_SENSORS); i++) {
-        temperatures[i] = 0.1f * (float) (((uint16_t)(buffer[27 + (i * 2)] << 8u) | (uint16_t)(buffer[28 + (i * 2)]))-2731);
+        temperatures[i] = ((uint16_t)(buffer[27 + (i * 2)] << 8u) | (uint16_t)(buffer[28 + (i * 2)]))-2731;
     }
 }
 
@@ -255,7 +180,7 @@ void Bms::queryCellVoltages() {
 
 void Bms::parseVoltagesResponse(const uint8_t *buffer) {
     for (int i = 0; i < min(numCells, NUM_CELLS); i++) {
-        cellVoltages[i] = 0.001f * (float) ((uint16_t)(buffer[i * 2 + 4] << 8u) | (uint16_t)(buffer[i * 2 + 5]));
+        cellVoltages[i] = (uint16_t)(buffer[i * 2 + 4] << 8u) | (uint16_t)(buffer[i * 2 + 5]);
     }
 }
 
@@ -333,27 +258,27 @@ void Bms::printCellVoltages(Stream *client) {
 
 void Bms::printStates(Stream *client) {
     char buffer[64] = {0};
-    sprintf(buffer, R"===("charge": "%sA",)===", current < 0 ? String(0).c_str() : String(current).c_str());
+    sprintf(buffer, R"===("charge": "%sA",)===", current < 0 ? String(0).c_str() : String(current/1000).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("discharge": "%sA",)===", current < 0 ? String(-current).c_str() : String(0).c_str());
+    sprintf(buffer, R"===("discharge": "%sA",)===", current < 0 ? String(-current/1000).c_str() : String(0).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("totalVoltage": "%sV",)===", String(totalVoltage).c_str());
+    sprintf(buffer, R"===("totalVoltage": "%sV",)===", String(totalVoltage/1000).c_str());
     client->println(buffer);
     sprintf(buffer, R"===("remainingSOC": %d,)===", stateOfCharge);
     client->println(buffer);
-    sprintf(buffer, R"===("minVoltage": "%sV",)===", String(minVoltage24).c_str());
+    sprintf(buffer, R"===("minVoltage": "%sV",)===", String(minVoltage24/1000).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("maxVoltage": "%sV",)===", String(maxVoltage24).c_str());
+    sprintf(buffer, R"===("maxVoltage": "%sV",)===", String(maxVoltage24/1000).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("maxCharge": "%sA",)===", String(maxCharge24).c_str());
+    sprintf(buffer, R"===("maxCharge": "%sA",)===", String(maxCharge24/1000).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("maxDischarge": "%sA",)===", String(maxDischarge24).c_str());
+    sprintf(buffer, R"===("maxDischarge": "%sA",)===", String(maxDischarge24/1000).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("maxPower": "%sW",)===", String(balanceCapacity).c_str());
+    sprintf(buffer, R"===("maxPower": "%sW",)===", String(balanceCapacity/1000).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("temp1": "%sC",)===", String(temperatures[0]).c_str());
+    sprintf(buffer, R"===("temp1": "%sC",)===", String(temperatures[0]/1000).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("temp2": "%sC")===", String(temperatures[1]).c_str());
+    sprintf(buffer, R"===("temp2": "%sC")===", String(temperatures[1]/1000).c_str());
     client->println(buffer);
     client->println("}");
 }

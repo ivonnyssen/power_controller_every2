@@ -109,7 +109,7 @@ void WebServer::sendResponse(Stream *client, const char* url, int type) {
     if(strcmp(url, "/") == 0) {
         printIndexPage(client);
     } else if(strcmp(url, "/sensors.json") == 0){
-        sensors->printJson(client);
+        sensorsPrintJson(client);
     } else if(strcmp(url, "/battery.json") == 0){
         bms->printCellVoltages(client);
         bms->printFaults(client);
@@ -140,10 +140,9 @@ void WebServer::readAndLogRequestLines(Stream *client) {
     }
 }
 
-WebServer::WebServer(Relay *aRelayPtr, Bms *aBmsPtr, Sensors *aSensorPtr) {
+WebServer::WebServer(Relay *aRelayPtr, Bms *aBmsPtr) {
     this->relay = aRelayPtr;
     this->bms = aBmsPtr;
-    this->sensors = aSensorPtr;
 }
 
 void WebServer::begin() {

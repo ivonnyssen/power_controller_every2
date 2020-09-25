@@ -3,25 +3,31 @@
 #else
 #include <MockSD.h>
 #endif
-void Sensors::measureAndLog() {
+
+#define TINY_BME280_I2C
+#include <TinyBME280.h>
+SensorData sensorData[NUM_SENSOR_RECORDS]{0};
+tiny::BME280 bme;
+time_t sensorsLastLogTime;
+
+void sensorsMeasureAndLog() {
     for(int i = 0; i < NUM_SENSOR_RECORDS - 1; i++){
         sensorData[i] = sensorData[i + 1];
     }
-    bme.takeForcedMeasurement();
-    lastLogTime = now();
-    sensorData[NUM_SENSOR_RECORDS - 1] = {lastLogTime, bme.readPressure() / 100.0F, bme.readTemperature(), bme.readHumidity()};
+    sensorsLastLogTime = now();
+    sensorData[NUM_SENSOR_RECORDS - 1] = {sensorsLastLogTime, bme.readFixedPressure() / 100.0, bme.readFixedTempC() / 100.0, bme.readFixedHumidity() / 100.0};
 
+#if DEBUG_SENSORS
     char buffer[64] = {0};
     tmElements_t logTime;
     breakTime(sensorData[NUM_SENSOR_RECORDS - 1].readoutTime, logTime);
     sprintf(buffer, "%02d-%02d %02d:%02d, %s, %s, %s", logTime.Month, logTime.Day, logTime.Hour, logTime.Minute,
             String(sensorData[NUM_SENSOR_RECORDS - 1].pressure).c_str(), String(sensorData[NUM_SENSOR_RECORDS - 1].temperature).c_str(), String(sensorData[NUM_SENSOR_RECORDS - 1].humidity).c_str());
-#if DEBUG_SENSORS
     if(Serial) Serial.println(buffer);
 #endif
 }
 
-void Sensors::printJson(Stream *client) {
+void sensorsPrintJson(Stream *client) {
     client->println(R"===({ "values":[)===");
     for(int i = 0; i < NUM_SENSOR_RECORDS; i++){
         char buffer[128] = {0};
@@ -40,20 +46,6 @@ void Sensors::printJson(Stream *client) {
     client->println("]}");
 }
 
-bool Sensors::begin() {
-    if(!bme.begin()){
-        if(Serial) Serial.println("BME280 failed.");
-        return false;
-    } else {
-        bme.setSampling(Adafruit_BME280::MODE_FORCED,
-                        Adafruit_BME280::SAMPLING_X1, // temperature
-                        Adafruit_BME280::SAMPLING_X1, // pressure
-                        Adafruit_BME280::SAMPLING_X1, // humidity
-                        Adafruit_BME280::FILTER_OFF   );
-    }
-    return true;
-}
-
-Sensors::Sensors() {
-    lastLogTime = 0;
+void sensorsBegin() {
+    bme.begin();
 }

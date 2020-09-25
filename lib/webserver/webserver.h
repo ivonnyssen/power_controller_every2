@@ -15,7 +15,7 @@
 #endif
 
 #define LISTEN_PORT 80
-#define DEBUG_WEB_SERVER true
+#define DEBUG_WEB_SERVER false
 
 class Request{
 public:
@@ -33,7 +33,7 @@ public:
 
 class WebServer {
 public:
-    WebServer(Relay* aRelayPtr, Bms* aBmsPtr, Sensors* aSensorPtr);
+    WebServer(Relay* aRelayPtr, Bms* aBmsPtr);
     void begin();
     void handleHttpRequest();
 #ifndef UNIT_TEST
@@ -43,7 +43,6 @@ private:
     EthernetServer server = EthernetServer(LISTEN_PORT);
     Relay* relay{};
     Bms* bms{};
-    Sensors* sensors{};
     static Request parseRequest(Stream *client);
     static void readAndLogRequestLines(Stream *client);
     void sendResponse(Stream *client, const char* url, int type);

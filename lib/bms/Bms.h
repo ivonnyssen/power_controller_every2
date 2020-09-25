@@ -44,7 +44,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "ProtectionStatus.h"
 
-#define BMS_OPTION_DEBUG true
+#define BMS_OPTION_DEBUG false
 
 #define NUM_TEMP_SENSORS 2
 #define NUM_CELLS 8
@@ -114,10 +114,10 @@ public:
     void poll(); // Call this every time you want to poll the Bms
     bool hasComError() const;  // Returns true if there was a timeout or checksum error on the last call
 
-    float totalVoltage;
-    float current;
-    float balanceCapacity;
-    float rateCapacity;
+    uint16_t totalVoltage;
+    uint16_t current;
+    uint16_t balanceCapacity;
+    uint16_t rateCapacity;
     uint16_t cycleCount;
     ProductionDate productionDate;
     ProtectionStatus protectionStatus;
@@ -127,13 +127,13 @@ public:
     bool isChargeFetEnabled;
     uint8_t numCells;
     uint8_t numTemperatureSensors;
-    float temperatures[NUM_TEMP_SENSORS]{};
-    float cellVoltages[NUM_CELLS]{};
+    uint16_t temperatures[NUM_TEMP_SENSORS]{};
+    uint16_t cellVoltages[NUM_CELLS]{};
     char name[32]{0};
-    float minVoltage24;
-    float maxVoltage24;
-    float maxCharge24;
-    float maxDischarge24;
+    int minVoltage24;
+    int maxVoltage24;
+    int maxCharge24;
+    int maxDischarge24;
     time_t lastPollTime;
 
     void clear24Values();
@@ -164,9 +164,6 @@ private:
     void parseVoltagesResponse(const uint8_t *buffer);
     void parseNameResponse(const uint8_t *buffer, uint8_t length);
 
-#if BMS_OPTION_DEBUG
-    void debug();  // Calling this method will print out the received data to the main serial port
-#endif
 #ifdef UNIT_TEST
 private:
 #endif

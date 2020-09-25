@@ -21,7 +21,6 @@
 
 Relay* relay;
 
-Sensors* sensors;
 #define SENSOR_UPDATE_INTERVAL 10
 
 Bms* bms;
@@ -36,9 +35,8 @@ void setup() {
     Serial.begin(256000);
 
     relay = new Relay;
-    sensors = new Sensors;
     bms = new Bms(&Serial1);
-    webServer = new WebServer(relay, bms, sensors);
+    webServer = new WebServer(relay, bms);
 
     //get all CS pins to high before we do anything to the bus
     pinMode(ETHERNET_CS_PIN,OUTPUT);
@@ -47,7 +45,7 @@ void setup() {
     webServer->begin();
     ntpBegin(PST);
     relay->begin();
-    sensors->begin();
+    sensorsBegin();
     bms->begin();
 }
 
@@ -57,18 +55,18 @@ void  loop() {
     webServer->handleHttpRequest();
 
     time_t seconds = now();
-    if(seconds % SENSOR_UPDATE_INTERVAL == 0 && seconds != sensors->lastLogTime) {
-        sensors->measureAndLog();
+    if(seconds % SENSOR_UPDATE_INTERVAL == 0 && seconds != sensorsLastLogTime) {
+        sensorsMeasureAndLog();
     }
 
-/*    if(seconds % BMS_UPDATE_INTERVAL == 0 && seconds != bms->lastPollTime){
+    if(seconds % BMS_UPDATE_INTERVAL == 0 && seconds != bms->lastPollTime){
         bms->poll();
     }
 
     if(seconds % SECS_PER_DAY == 0){
         bms->clear24Values();
         bms->clearFaultCounts();
-    } */
+    }
 }
 
 #endif
