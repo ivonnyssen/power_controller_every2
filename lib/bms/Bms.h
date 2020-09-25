@@ -44,7 +44,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "ProtectionStatus.h"
 
-#define BMS_OPTION_DEBUG false
+#define BMS_OPTION_DEBUG true
 
 #define NUM_TEMP_SENSORS 2
 #define NUM_CELLS 8
@@ -173,7 +173,6 @@ private:
     Stream* serial;
     bool comError;
     uint32_t balanceStatus;  // The cell balance statuses, stored as a bitfield
-    ProtectionStatus lastProtectionStatus;
 };
 
 #endif //POWER_CONTROLLER_EVERY_BMS_H

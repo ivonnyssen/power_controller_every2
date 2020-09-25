@@ -48,7 +48,7 @@ void setup() {
     ntpBegin(PST);
     relay->begin();
     sensors->begin();
-//    bms->begin();
+    bms->begin();
 }
 
 void  loop() {

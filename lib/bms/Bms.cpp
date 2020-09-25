@@ -32,7 +32,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-//#ifdef ARDUINO
+#ifdef ARDUINO
 
 #include <Bms.h>
 
@@ -58,13 +58,13 @@ Bms::Bms(Stream *port){
     maxVoltage24 = 0;
     maxCharge24 = 0;
     maxDischarge24 = 0;
-    serial = nullptr;
 }
 
 void Bms::begin(uint16_t timeout) {
 #if BMS_OPTION_DEBUG
     Serial.println("OverkillSolarBMS Begin!");
 #endif
+    Serial.println("here");
     serial->setTimeout(timeout);
 }
 
@@ -320,7 +320,7 @@ void Bms::printCellVoltages(Stream *client) {
     client->println(R"===({ "cellVoltages":[)===");
     for(int i = 0; i < NUM_CELLS; i++){
         char buffer[64] = {0};
-        sprintf(buffer, R"===({"cell":"%d", "cellVoltage":%.3f, "balancing": %s})===", i, cellVoltages[i], isBalancing(i) ? "true" : "false");
+        sprintf(buffer, R"===({"cell":"%d", "cellVoltage":%s, "balancing": %s})===", i, String(cellVoltages[i]).c_str(), isBalancing(i) ? "true" : "false");
         client->print(buffer);
         if(i != NUM_CELLS - 1) {
             client->println(",");
@@ -333,29 +333,29 @@ void Bms::printCellVoltages(Stream *client) {
 
 void Bms::printStates(Stream *client) {
     char buffer[64] = {0};
-    sprintf(buffer, R"===("charge": "%.2fA",)===", current < 0 ? 0 : current);
+    sprintf(buffer, R"===("charge": "%sA",)===", current < 0 ? String(0).c_str() : String(current).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("discharge": "%.2fA",)===", current < 0 ? -current : 0);
+    sprintf(buffer, R"===("discharge": "%sA",)===", current < 0 ? String(-current).c_str() : String(0).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("totalVoltage": "%.2fV",)===", totalVoltage);
+    sprintf(buffer, R"===("totalVoltage": "%sV",)===", String(totalVoltage).c_str());
     client->println(buffer);
     sprintf(buffer, R"===("remainingSOC": %d,)===", stateOfCharge);
     client->println(buffer);
-    sprintf(buffer, R"===("minVoltage": "%.2fV",)===", minVoltage24);
+    sprintf(buffer, R"===("minVoltage": "%sV",)===", String(minVoltage24).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("maxVoltage": "%.2fV",)===", maxVoltage24);
+    sprintf(buffer, R"===("maxVoltage": "%sV",)===", String(maxVoltage24).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("maxCharge": "%.2fA",)===", maxCharge24);
+    sprintf(buffer, R"===("maxCharge": "%sA",)===", String(maxCharge24).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("maxDischarge": "%.2fA",)===", maxDischarge24);
+    sprintf(buffer, R"===("maxDischarge": "%sA",)===", String(maxDischarge24).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("maxPower": "%.2fW",)===", balanceCapacity);
+    sprintf(buffer, R"===("maxPower": "%sW",)===", String(balanceCapacity).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("temp1": "%.2fC",)===", temperatures[0]);
+    sprintf(buffer, R"===("temp1": "%sC",)===", String(temperatures[0]).c_str());
     client->println(buffer);
-    sprintf(buffer, R"===("temp2": "%.2fC")===", temperatures[1]);
+    sprintf(buffer, R"===("temp2": "%sC")===", String(temperatures[1]).c_str());
     client->println(buffer);
     client->println("}");
 }
 
-//#endif
+#endif
