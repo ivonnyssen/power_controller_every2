@@ -15,9 +15,9 @@
 
 typedef struct SensorData{
     time_t readoutTime;
-    float pressure;
-    float temperature;
-    float humidity;
+    uint32_t pressure;
+    uint32_t temperature;
+    uint32_t humidity;
 } SensorData;
 
 void sensorsBegin();

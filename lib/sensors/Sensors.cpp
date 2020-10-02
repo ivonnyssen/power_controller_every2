@@ -15,7 +15,7 @@ void sensorsMeasureAndLog() {
         sensorData[i] = sensorData[i + 1];
     }
     sensorsLastLogTime = now();
-    sensorData[NUM_SENSOR_RECORDS - 1] = {sensorsLastLogTime, bme.readFixedPressure() / 100.0, bme.readFixedTempC() / 100.0, bme.readFixedHumidity() / 100.0};
+    sensorData[NUM_SENSOR_RECORDS - 1] = {sensorsLastLogTime, bme.readFixedPressure(), bme.readFixedTempC(), bme.readFixedHumidity()};
 
 #if DEBUG_SENSORS
     char buffer[64] = {0};
@@ -34,8 +34,8 @@ void sensorsPrintJson(Stream *client) {
         tmElements_t logTime;
         breakTime(sensorData[i].readoutTime, logTime);
         sprintf(buffer, R"===({"time":"%02d-%02d %02d:%02d", "pressure":%s, "temp":%s, "humidity":%s})===",
-                logTime.Month, logTime.Day, logTime.Hour, logTime.Minute, String(sensorData[i].pressure).c_str(),
-                String(sensorData[i].temperature).c_str(), String(sensorData[i].humidity).c_str());
+                logTime.Month, logTime.Day, logTime.Hour, logTime.Minute, String(sensorData[i].pressure / 100.0).c_str(),
+                String(sensorData[i].temperature / 100.0).c_str(), String(sensorData[i].humidity / 1000.0).c_str());
         client->print(buffer);
         if(i != NUM_SENSOR_RECORDS - 1) {
             client->println(",");

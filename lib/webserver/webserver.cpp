@@ -94,7 +94,6 @@ void WebServer::sendResponse(Stream *client, const char* url, int type) {
     } else {
         client->println("HTTP/1.1 200 OK");
         if(strcmp(url, "/") == 0){
-            Serial.println("Here");
             client->println("Content-Type: text/html");
             char buffer[64] = {0};
             sprintf(buffer, "Refresh: 450; url=http://%d.%d.%d.%d%s",EthernetClass::localIP()[0],
@@ -102,7 +101,7 @@ void WebServer::sendResponse(Stream *client, const char* url, int type) {
             client->println(buffer);
         }
     }
-    if(strEndsWith(url, ".json")) { Serial.println("json"); client->println("Content-Type: application/json"); }
+    if(strEndsWith(url, ".json")) { client->println("Content-Type: application/json"); }
     client->println("Connection: close");
     client->println();
 

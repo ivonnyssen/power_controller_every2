@@ -1,14 +1,10 @@
 /*
  * Power Controller on a web page
  * Ethernet shield attached to pins 10, 11, 12, 13
- * Relay module is attached to digital pins 2, 3, 5, 6
+ * Relay module is attached to digital pins 2, 3, 4, 5
  * Ethernet CS pin is 10
- * SD card CS pin is 4
- * Arducam CS pin is 7
  * Battery Management System is attached to RX and TX (Serial 1)
  */
-
-#define DEBUG false
 
 #include <TimeLib.h>
 #include <Ntp.h>
@@ -21,10 +17,10 @@
 
 Relay* relay;
 
-#define SENSOR_UPDATE_INTERVAL 10
+#define SENSOR_UPDATE_INTERVAL 900
 
 Bms* bms;
-#define BMS_UPDATE_INTERVAL 61
+#define BMS_UPDATE_INTERVAL 60
 
 WebServer* webServer;
 
@@ -32,7 +28,7 @@ WebServer* webServer;
 
 #ifndef UNIT_TEST
 void setup() {
-    Serial.begin(256000);
+    Serial.begin(9600);
 
     relay = new Relay;
     bms = new Bms(&Serial1);
